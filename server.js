@@ -260,7 +260,7 @@ app.get('/:config/stream/:type/:id.json', withConfig, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Addon Xtream lancé sur http://localhost:${PORT}`);
-  console.log(`Page de config : http://localhost:${PORT}/configure.html`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Addon Xtream lancé sur le port ${PORT}`);
+  console.log(`Page de config : /configure.html`);
 });
