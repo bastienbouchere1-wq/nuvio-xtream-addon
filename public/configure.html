@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurer IPTV Xtream</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#0f1115; color:#eee; display:flex; justify-content:center; padding:40px 16px; }
+  .card { background:#1a1d24; padding:32px; border-radius:16px; max-width:420px; width:100%; box-shadow:0 8px 30px rgba(0,0,0,.4); }
+  h1 { font-size:1.4rem; margin-bottom:4px; }
+  p.sub { color:#9aa0ab; margin-top:0; margin-bottom:24px; font-size:.9rem; }
+  label { display:block; margin-top:16px; margin-bottom:6px; font-size:.85rem; color:#c7cbd1; }
+  input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #2c3038; background:#14161b; color:#fff; box-sizing:border-box; font-size:.95rem; }
+  button { margin-top:24px; width:100%; padding:12px; border:none; border-radius:8px; background:#5b6cff; color:#fff; font-weight:600; cursor:pointer; font-size:.95rem; }
+  button:hover { background:#4756e0; }
+  .result { margin-top:20px; padding:14px; background:#14161b; border-radius:8px; word-break:break-all; font-size:.8rem; display:none; }
+  .result.show { display:block; }
+  .copy-btn { margin-top:10px; background:#2c3038; }
+  .error { color:#ff6b6b; font-size:.85rem; margin-top:10px; display:none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>IPTV Xtream — Configuration</h1>
+  <p class="sub">Renseigne les infos de ton abonnement Xtream Codes pour générer ton lien d'installation.</p>
+
+  <label>Adresse du serveur (host:port)</label>
+  <input id="host" placeholder="exemple.com:8080" />
+
+  <label>Nom d'utilisateur</label>
+  <input id="user" placeholder="ton identifiant" />
+
+  <label>Mot de passe</label>
+  <input id="pass" type="password" placeholder="ton mot de passe" />
+
+  <button onclick="generate()">Générer le lien</button>
+  <p class="error" id="error"></p>
+
+  <div class="result" id="result">
+    <div id="url"></div>
+    <button class="copy-btn" onclick="copyUrl()">Copier le lien</button>
+  </div>
+</div>
+
+<script>
+let currentUrl = '';
+
+async function generate() {
+  const host = document.getElementById('host').value.trim();
+  const user = document.getElementById('user').value.trim();
+  const pass = document.getElementById('pass').value.trim();
+  const errorEl = document.getElementById('error');
+  errorEl.style.display = 'none';
+
+  if (!host || !user || !pass) {
+    errorEl.textContent = 'Merci de remplir tous les champs.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/generate-url?host=${encodeURIComponent(host)}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    currentUrl = data.manifestUrl;
+    document.getElementById('url').textContent = currentUrl;
+    document.getElementById('result').classList.add('show');
+  } catch (e) {
+    errorEl.textContent = 'Erreur : ' + e.message;
+    errorEl.style.display = 'block';
+  }
+}
+
+function copyUrl() {
+  navigator.clipboard.writeText(currentUrl);
+  alert('Lien copié ! Colle-le dans Nuvio pour installer l\'addon.');
+}
+</script>
+</body>
+</html>
