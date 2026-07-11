@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurer IPTV Xtream</title>
+<style>
+  * { box-sizing: border-box; }
+  :root { --bg:#0e0f13; --card:#181b22; --card2:#14161b; --line:#282c34; --txt:#eceef2; --mut:#8b909b; --acc:#5b6cff; }
+  body { font-family:-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--txt); margin:0; padding:28px 14px 90px; display:flex; justify-content:center; }
+  .card { background:var(--card); padding:26px; border-radius:18px; max-width:560px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+  h1 { font-size:1.35rem; margin:0 0 3px; }
+  p.sub { color:var(--mut); margin:0 0 20px; font-size:.88rem; }
+  label.fld { display:block; margin:13px 0 6px; font-size:.8rem; color:#c3c7cf; }
+  input[type=text],input[type=password],input.search { width:100%; padding:11px 12px; border-radius:9px; border:1px solid var(--line); background:var(--card2); color:#fff; font-size:.95rem; }
+  input.search { margin-top:8px; }
+  button { margin-top:16px; width:100%; padding:12px; border:none; border-radius:9px; background:var(--acc); color:#fff; font-weight:600; cursor:pointer; font-size:.95rem; }
+  button:hover { filter:brightness(1.08); }
+  button.sec { background:#282c34; }
+  button:disabled { opacity:.5; cursor:default; }
+  .err { color:#ff6b6b; font-size:.85rem; margin-top:10px; display:none; }
+  .hidden { display:none; }
+  .sec { margin-top:20px; border-top:1px solid var(--line); padding-top:16px; }
+  .sec h3 { margin:0 0 4px; font-size:1rem; }
+  .sec .hint { color:var(--mut); font-size:.78rem; margin:0 0 10px; }
+  .head { display:flex; align-items:center; justify-content:space-between; }
+  .mini button { width:auto; margin:0 0 0 8px; padding:5px 10px; font-size:.72rem; }
+  .list { max-height:190px; overflow-y:auto; border:1px solid var(--line); border-radius:9px; padding:5px; margin-top:8px; }
+  .row { display:flex; align-items:center; gap:11px; padding:8px; border-radius:7px; }
+  .row:hover { background:#20242c; }
+  .row input { width:18px; height:18px; accent-color:var(--acc); flex:0 0 auto; }
+  .row span { font-size:.88rem; }
+  .count { color:var(--mut); font-size:.78rem; font-weight:400; }
+  .toggle { display:flex; align-items:flex-start; gap:11px; padding:9px 4px; }
+  .toggle input { width:18px; height:18px; accent-color:var(--acc); margin-top:1px; flex:0 0 auto; }
+  .toggle .t { font-size:.9rem; }
+  .toggle .d { color:var(--mut); font-size:.76rem; margin-top:2px; }
+  .seg { display:flex; gap:8px; margin-top:8px; }
+  .seg label { flex:1; text-align:center; padding:11px 8px; border:1px solid var(--line); border-radius:9px; cursor:pointer; font-size:.85rem; }
+  .seg input { display:none; }
+  .seg label:has(input:checked) { border-color:var(--acc); background:rgba(91,108,255,.15); }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .chip { flex:1; min-width:110px; border:1px solid var(--line); border-radius:9px; }
+  .result { margin-top:22px; padding:15px; background:var(--card2); border-radius:10px; word-break:break-all; font-size:.8rem; display:none; }
+  .result.show { display:block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>IPTV Xtream</h1>
+  <p class="sub">Identifiants → organisation → options → ton lien personnalisé.</p>
+
+  <label class="fld">Adresse du serveur (host:port)</label>
+  <input type="text" id="host" placeholder="exemple.com:8080" />
+  <label class="fld">Nom d'utilisateur</label>
+  <input type="text" id="user" placeholder="ton identifiant" />
+  <label class="fld">Mot de passe</label>
+  <input type="password" id="pass" placeholder="ton mot de passe" />
+
+  <button id="loadBtn" onclick="loadCategories()">Charger mes catégories</button>
+  <p class="err" id="error"></p>
+
+  <div id="config" class="hidden">
+
+    <div class="sec">
+      <h3>Types de contenu</h3>
+      <p class="hint">Décoche ce que tu ne veux pas du tout.</p>
+      <div class="chips">
+        <label class="toggle chip"><input type="checkbox" id="t-live" checked onchange="render()"><span class="t">Live TV</span></label>
+        <label class="toggle chip"><input type="checkbox" id="t-vod" checked onchange="render()"><span class="t">Films</span></label>
+        <label class="toggle chip"><input type="checkbox" id="t-series" checked onchange="render()"><span class="t">Séries</span></label>
+      </div>
+    </div>
+
+    <div id="live-org" class="sec">
+      <h3>Organisation du Live</h3>
+      <p class="hint"><b>Par thème</b> : chaînes dédoublonnées et rangées par genre (recommandé). <b>Par catégories</b> : garde les catégories de ton fournisseur.</p>
+      <div class="seg">
+        <label><input type="radio" name="org" value="theme" checked onchange="render()"><span>Par thème</span></label>
+        <label><input type="radio" name="org" value="category" onchange="render()"><span>Par catégories</span></label>
+      </div>
+      <p class="hint" id="theme-note" style="margin-top:10px">En mode thème, pas besoin de choisir des catégories Live : tout est rangé automatiquement en Généralistes / Sport / Cinéma / Info / Jeunesse / Découverte / Musique.</p>
+    </div>
+
+    <div class="sec">
+      <h3>Langues des chaînes</h3>
+      <p class="hint">Ne garde que les chaînes des langues cochées (retire NL, US, arabe, etc.). Les chaînes les plus connues sont remontées en tête.</p>
+      <div class="chips" id="langs">
+        <label class="toggle chip"><input type="checkbox" class="lang" value="fr" checked><span class="t">Français</span></label>
+        <label class="toggle chip"><input type="checkbox" class="lang" value="en"><span class="t">Anglais</span></label>
+        <label class="toggle chip"><input type="checkbox" class="lang" value="ar"><span class="t">Arabe</span></label>
+        <label class="toggle chip"><input type="checkbox" class="lang" value="es"><span class="t">Espagnol</span></label>
+        <label class="toggle chip"><input type="checkbox" class="lang" value="pt"><span class="t">Portugais</span></label>
+        <label class="toggle chip"><input type="checkbox" class="lang" value="it"><span class="t">Italien</span></label>
+        <label class="toggle chip"><input type="checkbox" class="lang" value="de"><span class="t">Allemand</span></label>
+        <label class="toggle chip"><input type="checkbox" class="lang" value="nl"><span class="t">Néerlandais</span></label>
+        <label class="toggle chip"><input type="checkbox" class="lang" value="tr"><span class="t">Turc</span></label>
+      </div>
+    </div>
+
+    <div id="sections"></div>
+
+    <div class="sec">
+      <h3>Affichage</h3>
+      <p class="hint">Options qui changent réellement le rendu.</p>
+      <label class="toggle"><input type="checkbox" id="o-group" checked><div><div class="t">Regrouper les doublons de chaînes</div><div class="d">Une carte par chaîne, les qualités deviennent des sources au clic.</div></div></label>
+      <label class="toggle"><input type="checkbox" id="o-sort" checked><div><div class="t">Trier les sources par qualité</div></div></label>
+      <label class="toggle"><input type="checkbox" id="o-clean" checked><div><div class="t">Nettoyer les noms</div></div></label>
+      <label class="toggle"><input type="checkbox" id="o-junk" checked><div><div class="t">Masquer les chaînes séparatrices / vides</div></div></label>
+      <label class="toggle"><input type="checkbox" id="o-adult" checked><div><div class="t">Masquer les catégories adultes</div></div></label>
+      <label class="toggle"><input type="checkbox" id="o-logos" checked><div><div class="t">Logos HD</div><div class="d">Remplace les logos basse qualité par des logos nets (grandes chaînes FR). Retombe sur le logo du serveur sinon.</div></div></label>
+    </div>
+
+    <div class="sec">
+      <h3>Lecture</h3>
+      <p class="hint">Format des flux live. Si une chaîne rame, essaie l'autre.</p>
+      <div class="seg">
+        <label><input type="radio" name="fmt" value="m3u8" checked><span>HLS (.m3u8)</span></label>
+        <label><input type="radio" name="fmt" value="ts"><span>MPEG-TS (.ts)</span></label>
+      </div>
+    </div>
+
+    <button id="genBtn" onclick="generate()">Générer mon lien</button>
+  </div>
+
+  <div class="result" id="result">
+    <div id="url"></div>
+    <button class="sec" onclick="copyUrl()">Copier le lien</button>
+  </div>
+</div>
+
+<script>
+let categories = { live: [], vod: [], series: [] };
+const selected = { live: new Set(), vod: new Set(), series: new Set() };
+const LABELS = { live: 'Catégories Live', vod: 'Films', series: 'Séries' };
+let currentUrl = '';
+
+function creds() { return { host: v('host'), user: v('user'), pass: v('pass') }; }
+function v(id) { return document.getElementById(id).value.trim(); }
+function showError(m) { const e = document.getElementById('error'); e.textContent = m; e.style.display = m ? 'block' : 'none'; }
+function typeOn(t) { return document.getElementById('t-' + t).checked; }
+function liveOrg() { return document.querySelector('input[name=org]:checked').value; }
+
+async function loadCategories() {
+  const { host, user, pass } = creds();
+  showError('');
+  if (!host || !user || !pass) { showError('Remplis host, utilisateur et mot de passe.'); return; }
+  const btn = document.getElementById('loadBtn');
+  btn.disabled = true; btn.textContent = 'Chargement…';
+  try {
+    const q = `host=${encodeURIComponent(host)}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`;
+    const res = await fetch('/api/categories?' + q);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    categories = data;
+    document.getElementById('config').classList.remove('hidden');
+    render();
+  } catch (e) { showError('Erreur : ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Recharger mes catégories'; }
+}
+
+// Affiche les sections de catégories selon : type activé + (pour Live) mode catégories
+function render() {
+  document.getElementById('live-org').style.display = typeOn('live') ? 'block' : 'none';
+  const c = document.getElementById('sections');
+  c.innerHTML = '';
+  const show = [];
+  if (typeOn('live') && liveOrg() === 'category') show.push('live');
+  if (typeOn('vod')) show.push('vod');
+  if (typeOn('series')) show.push('series');
+  show.forEach((type) => {
+    const cats = categories[type] || [];
+    if (!cats.length) return;
+    const sec = document.createElement('div');
+    sec.className = 'sec';
+    sec.innerHTML =
+      '<div class="head"><h3>' + LABELS[type] + ' <span class="count" id="count-' + type + '"></span></h3>' +
+      '<div class="mini"><button class="sec" onclick="selectAll(\'' + type + '\',true)">Tout</button>' +
+      '<button class="sec" onclick="selectAll(\'' + type + '\',false)">Aucun</button></div></div>' +
+      '<p class="hint">Coche les catégories à afficher.</p>' +
+      '<input class="search" placeholder="Filtrer…" oninput="renderList(\'' + type + '\',this.value)" />' +
+      '<div class="list" id="list-' + type + '"></div>';
+    c.appendChild(sec);
+    renderList(type, '');
+    updateCount(type);
+  });
+}
+
+function renderList(type, filter) {
+  const list = document.getElementById('list-' + type);
+  if (!list) return;
+  const f = (filter || '').toLowerCase();
+  list.innerHTML = '';
+  categories[type].filter(x => x.name.toLowerCase().includes(f)).forEach((cat) => {
+    const row = document.createElement('label');
+    row.className = 'row';
+    row.innerHTML = '<input type="checkbox" ' + (selected[type].has(cat.id) ? 'checked' : '') + ' /><span>' + cat.name + '</span>';
+    row.querySelector('input').addEventListener('change', (e) => { if (e.target.checked) selected[type].add(cat.id); else selected[type].delete(cat.id); updateCount(type); });
+    list.appendChild(row);
+  });
+}
+function selectAll(type, on) { categories[type].forEach(x => { if (on) selected[type].add(x.id); else selected[type].delete(x.id); }); const sec = document.getElementById('list-' + type).closest('.sec'); renderList(type, sec.querySelector('.search').value); updateCount(type); }
+function updateCount(type) { const el = document.getElementById('count-' + type); if (el) el.textContent = '(' + selected[type].size + '/' + categories[type].length + ')'; }
+
+function gatherOpts() {
+  return {
+    logos: document.getElementById('o-logos').checked,
+    group: document.getElementById('o-group').checked,
+    sortSources: document.getElementById('o-sort').checked,
+    cleanNames: document.getElementById('o-clean').checked,
+    hideJunk: document.getElementById('o-junk').checked,
+    hideAdult: document.getElementById('o-adult').checked,
+    format: document.querySelector('input[name=fmt]:checked').value,
+    liveOrg: liveOrg(),
+    langs: [...document.querySelectorAll('input.lang:checked')].map(x => x.value),
+    types: { live: typeOn('live'), vod: typeOn('vod'), series: typeOn('series') }
+  };
+}
+
+async function generate() {
+  const { host, user, pass } = creds();
+  showError('');
+  const cats = {};
+  if (typeOn('live') && liveOrg() === 'category') cats.live = [...selected.live];
+  if (typeOn('vod')) cats.vod = [...selected.vod];
+  if (typeOn('series')) cats.series = [...selected.series];
+
+  const liveHas = typeOn('live') && (liveOrg() === 'theme' || selected.live.size > 0);
+  const vodHas = typeOn('vod') && selected.vod.size > 0;
+  const serHas = typeOn('series') && selected.series.size > 0;
+  if (!liveHas && !vodHas && !serHas) { showError('Active au moins un contenu (thème Live, ou des catégories).'); return; }
+
+  try {
+    const res = await fetch('/api/generate-url', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ host, user, pass, cats, opts: gatherOpts() }) });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    currentUrl = data.manifestUrl;
+    document.getElementById('url').textContent = currentUrl;
+    document.getElementById('result').classList.add('show');
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) { showError('Erreur : ' + e.message); }
+}
+function copyUrl() { navigator.clipboard.writeText(currentUrl); alert('Lien copié ! Colle-le dans Nuvio.'); }
+</script>
+</body>
+</html>
